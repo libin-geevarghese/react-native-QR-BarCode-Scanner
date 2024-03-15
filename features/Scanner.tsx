@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 
 //importing vision camera
@@ -29,9 +30,7 @@ const Scanner = () => {
 
   //Automatically request permission for camera on startup
   useEffect(() => {
-    async () => {
-      await requestPermission();
-    };
+    requestPermission();
   }, []);
 
   //code Scanner
@@ -119,7 +118,7 @@ const Scanner = () => {
           <TouchableOpacity
             style={styles.scanButton}
             onPress={() => {
-              return;
+              Alert.alert('Scann Success', `${barCode}`);
             }}>
             <Text style={styles.scanBtnText}>Submit</Text>
           </TouchableOpacity>
