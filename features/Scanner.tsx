@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  TurboModuleRegistry,
 } from 'react-native';
 
 //importing vision camera
@@ -23,8 +24,10 @@ const {width, height} = Dimensions.get('window');
 
 //Scanner component
 const Scanner = () => {
-  const [barCode, setBarcode] = useState(''); //initial value of bar code
+  const [data1, setData1] = useState(''); //initial value of bar code
   const [isInitializingCamera, setIsInitializingCamera] = useState(false); //for cam initialising
+  const [submitting, setSubmitting] = useState(false); //for setting the status of submitting to conditionally render submit button/ actiity indicater
+
   const {hasPermission, requestPermission} = useCameraPermission();
   const device = useCameraDevice('back');
 
@@ -55,14 +58,14 @@ const Scanner = () => {
       console.log(`value :  ${codes[0].value}.`);
       console.log(codes[0].value);
       console.log('************');
-      setBarcode(codes[0]?.value);
+      setData1(codes[0]?.value);
     },
   });
 
   //incase no camera permission
   if (!hasPermission) {
     return (
-      <View style={styles.container}>
+      <View style={styles.errorContainer}>
         <Text style={styles.text}>
           Please enable camera permission for this App in phone settings
         </Text>
@@ -73,7 +76,7 @@ const Scanner = () => {
   //incase no camera found
   if (!device) {
     return (
-      <View style={styles.container}>
+      <View style={styles.errorContainer}>
         <Text style={styles.text}>No camera found</Text>
       </View>
     );
@@ -101,6 +104,7 @@ const Scanner = () => {
       {/* camera starting */}
       {!isInitializingCamera && (
         <>
+          <Text style={styles.title}>||||||Bar Code Scanner</Text>
           <Camera
             style={styles.camera}
             device={device}
@@ -110,18 +114,65 @@ const Scanner = () => {
             onInitializedFailure={() => setIsInitializingCamera(false)} // Callback when camera initialization fails
             onInitialize={() => setIsInitializingCamera(true)} // Callback when camera initialization starts
           />
-          <View style={styles.outputContainer}>
-            <ScrollView>
-              <Text style={styles.text}>{barCode} </Text>
-            </ScrollView>
-          </View>
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={() => {
-              Alert.alert('Scann Success', `${barCode}`);
-            }}>
-            <Text style={styles.scanBtnText}>Submit</Text>
-          </TouchableOpacity>
+
+          {data1 != '' && (
+            <View style={styles.outputContainer}>
+              <ScrollView>
+                <Text style={styles.text}>{data1} </Text>
+              </ScrollView>
+            </View>
+          )}
+
+          {!submitting ? (
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={async () => {
+                setSubmitting(true);
+                if (!data1) {
+                  Alert.alert(
+                    'Nothing to submit',
+                    'Please Scan a Bar code or QR code',
+                  );
+                  setSubmitting(false);
+                  return;
+                }
+                try {
+                  const response = await fetch(
+                    'https://festobarcode.koinossolutions.com/submit',
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        data1,
+                      }),
+                    },
+                  );
+
+                  if (response.ok) {
+                    Alert.alert('Success', 'Data saved successfully!');
+                    setSubmitting(false);
+                    setData1('');
+                  } else {
+                    Alert.alert('Error', 'Failed to save data');
+                    setSubmitting(false);
+                    setData1('');
+                  }
+                } catch (error) {
+                  Alert.alert('Error', error.message);
+                  setSubmitting(false);
+                  setData1('');
+                }
+              }}>
+              <Text style={styles.scanBtnText}>Submit</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <Text>Submitting.Please wait....</Text>
+              <ActivityIndicator size="large" color="#0000ff" />
+            </>
+          )}
         </>
       )}
     </View>
@@ -129,13 +180,22 @@ const Scanner = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  errorContainer: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#b7c4b9',
+    padding: 15,
+  },
+  container: {
+    flex: 1,
+    // alignItems: 'center',
     // justifyContent: 'center',
+    backgroundColor: '#b7c4b9',
+    padding: 15,
   },
   title: {
-    color: 'black',
+    color: '#208afa',
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -149,6 +209,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   outputContainer: {
+    width: width * 0.9,
+    borderRadius: 15,
+    backgroundColor: 'white',
     marginVertical: 10,
     height: height * 0.2,
   },
@@ -158,7 +221,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   scanButton: {
-    backgroundColor: '#007AFF',
+    marginVertical: 15,
+    backgroundColor: '#344f3e',
     padding: 15,
     borderRadius: 8,
   },
