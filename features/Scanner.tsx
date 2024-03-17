@@ -104,7 +104,7 @@ const Scanner = () => {
       {/* camera starting */}
       {!isInitializingCamera && (
         <>
-          <Text style={styles.title}>||||||Bar Code Scanner</Text>
+          <Text style={styles.title}>||||||BarCodeX</Text>
           <Camera
             style={styles.camera}
             device={device}
@@ -130,46 +130,20 @@ const Scanner = () => {
                 setSubmitting(true);
                 if (!data1) {
                   Alert.alert(
-                    'Nothing to submit',
+                    'Nothing to clear',
                     'Please Scan a Bar code or QR code',
                   );
                   setSubmitting(false);
                   return;
                 }
-                try {
-                  const response = await fetch(
-                    'https://festobarcode.koinossolutions.com/submit',
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        data1,
-                      }),
-                    },
-                  );
-
-                  if (response.ok) {
-                    Alert.alert('Success', 'Data saved successfully!');
-                    setSubmitting(false);
-                    setData1('');
-                  } else {
-                    Alert.alert('Error', 'Failed to save data');
-                    setSubmitting(false);
-                    setData1('');
-                  }
-                } catch (error) {
-                  Alert.alert('Error', error.message);
-                  setSubmitting(false);
-                  setData1('');
-                }
+                setSubmitting(false);
+                setData1('');
               }}>
-              <Text style={styles.scanBtnText}>Submit</Text>
+              <Text style={styles.scanBtnText}>Clear Previous Data</Text>
             </TouchableOpacity>
           ) : (
             <>
-              <Text>Submitting.Please wait....</Text>
+              <Text>Clearing Data.Please wait....</Text>
               <ActivityIndicator size="large" color="#0000ff" />
             </>
           )}
